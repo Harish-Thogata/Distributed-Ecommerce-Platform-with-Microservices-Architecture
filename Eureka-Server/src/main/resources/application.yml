@@ -1,0 +1,18 @@
+spring:
+  application:
+    name: Eureka-Server
+    
+server:
+  port: 8761  # Default Eureka Server port
+  
+eureka:
+  client:
+    register-with-eureka: false  # This ensures that the Eureka server does not try to register itself.
+    fetch-registry: false  # This tells the server not to fetch other service instances.
+  server:
+    wait-time-in-ms-when-sync-empty: 0   # 2 seconds - Reduces unnecessary waiting time before regustering services
+    enable-self-preservation: true
+    renewal-percent-threshold: 0.85  # Default is 0.85 (85%)
+  instance:
+    lease-renewal-interval-in-seconds: 30  # Sends heartbeat every 30 seconds
+    

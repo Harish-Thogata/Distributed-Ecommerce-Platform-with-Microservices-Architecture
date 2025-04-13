@@ -1,0 +1,41 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<head>
+    <title>Payment Successful</title>
+    <style>
+        body {
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            height: 100vh;
+            margin: 0;
+            font-family: Arial, sans-serif;
+            background-color: #f4f4f4;
+        }
+        .success-message {
+            background-color: white;
+            padding: 20px;
+            border-radius: 10px;
+            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+            text-align: center;
+        }
+        .success-message h1 {
+            color: green;
+        }
+        .success-message a {
+            color: blue;
+            text-decoration: none;
+        }
+        .success-message a:hover {
+            text-decoration: underline;
+        }
+    </style>
+</head>
+<body>
+    <div class="success-message">
+        <h1>Payment Successful! 🎉</h1>
+        <p>Your payment has been processed successfully.</p>
+        <p>Check your <a th:href="@{/api/orders}">order history</a> for details.</p>
+    </div>
+</body>
+</html>

@@ -1,0 +1,108 @@
+server:
+  port: 8085
+
+spring:
+  application:
+    name: order-service
+    
+  datasource:   # datasource properties
+    url: jdbc:mysql://localhost:3306/orderdb
+    username: root
+    password: root
+    driver-class-name: com.mysql.cj.jdbc.Driver
+    hikari:
+      maximum-pool-size: 10
+      minimum-idle: 2
+      idle-timeout: 30000
+      max-lifetime: 1800000
+      connection-timeout: 30000
+      pool-name: HikariPool
+      auto-commit: true
+  jpa:
+    hibernate:
+      ddl-auto: update # To create tables dynamically
+    show-sql: true     # To print queries on console
+    open-in-view: false
+
+  cloud:
+    client:
+      ip-address: 127.0.0.1
+    loadbalancer:
+      ribbon:
+        enabled: true
+      
+  boot:
+    admin:
+      client:
+        url: http://localhost:9090/
+        instance:
+          prefer-ip: true
+        
+  kafka:
+    bootstrap-servers: localhost:9092
+    consumer:
+      group-id: order-service-consumer-group
+      auto-offset-reset: earliest
+      key-deserializer: org.apache.kafka.common.serialization.StringDeserializer
+      value-deserializer: org.springframework.kafka.support.serializer.JsonDeserializer
+      properties:
+        spring.json.trusted.packages: "com.ecommerce.common.dto,com.ecommerce.common.events"  # Explicit package
+        
+        #properties:
+       # "[spring.json.trusted.packages]": "com.productservice.dto"
+    producer:
+      key-serializer: org.apache.kafka.common.serialization.StringSerializer
+      value-serializer: org.springframework.kafka.support.serializer.JsonSerializer
+      
+  devtools:
+    livereload:
+      enabled: false
+  
+eureka:
+  instance:
+    hostname: localhost
+    # instance-id: ${spring.application.name}:${server.port}
+    instance-id: ${eureka.instance.hostname}:${server.port}  # Unique instance ID
+    prefer-ip-address: true
+  client:
+    service-url:
+      defaultZone: http://localhost:8761/eureka/
+      register-with-eureka: true
+    fetch-registry: true
+    
+management:
+  endpoints:
+    web:
+      exposure:
+        include: '*'
+  endpoint:
+    health:
+      show-details: always  # Show full health details
+
+# Swagger Configuration 
+springdoc:
+  api-docs:
+    path: /order-service/v3/api-docs  # Custom API docs path
+    enabled: true
+  swagger-ui:
+    path: /order-service/swagger-ui.html  # Explicitly set the Swagger UI path
+    enabled: false # Disable individual Swagger UIs
+  servers:
+    - url: http://localhost:8081  # Gateway URL
+      description: API Gateway
+
+openapi:
+  service:
+    title: Order Service API
+    version: 1.0.0
+    url: http://localhost:8085
+
+jwt:
+  secret: "X6mNUAoNymCWZu8CiiYkmdYD+2T9UK+GN/8H33FquE8=" # JWT secret key
+  expiration: 36000000  # 10 hours in milliseconds
+      
+logging:
+  level:
+    org.springframework.cloud.gateway: DEBUG
+    com.netflix.eureka: DEBUG
+    org.springframework.cloud.netflix.eureka: DEBUG

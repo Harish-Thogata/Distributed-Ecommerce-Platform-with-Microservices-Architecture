@@ -1,0 +1,111 @@
+server:
+  address: 0.0.0.0  # Allow external access
+  port: 8082
+  
+spring:
+  application:
+    name: user-service
+
+# Database Configuration
+  datasource:
+    url: jdbc:mysql://localhost:3306/userdb
+    username: root
+    password: root
+    driver-class-name: com.mysql.cj.jdbc.Driver
+    hikari:
+      maximum-pool-size: 10
+      minimum-idle: 2
+      idle-timeout: 30000
+      max-lifetime: 1800000
+      connection-timeout: 30000
+      pool-name: HikariPool
+      auto-commit: true
+  jpa:
+    hibernate:
+      ddl-auto: update
+    show-sql: true
+    open-in-view: false
+    
+  # Spring Boot Admin Client Configuration
+  boot:
+    admin:
+      client:
+        url: http://localhost:9090/
+        instance:
+          prefer-ip: true
+       
+  kafka:
+    bootstrap-servers: localhost:8080
+    producer:
+      key-serializer: org.apache.kafka.common.serialization.StringSerializer
+      value-serializer: org.apache.kafka.common.serialization.StringSerializer
+    
+# Mail Configuration (Use your own credentials)
+  mail:
+    host: smtp.gmail.com
+    port: 587
+    username: harish.thogata2000@gmail.com
+    password: left lwgi qqfe yzcb
+    properties:
+      mail: 
+        smtp:
+          auth: true
+          starttls:
+            enable: true
+         
+  devtools:
+    livereload:
+      enabled: false
+            
+eureka:
+  instance:
+    lease-renewal-interval-in-seconds: 10  # Faster renewal
+    lease-expiration-duration-in-seconds: 30  # Shorter expiration
+    hostname: localhost # user-service
+    instance-id: ${eureka.instance.hostname}:${server.port}  # Unique instance ID
+    prefer-ip-address: true
+  client:
+    service-url:
+      defaultZone: http://localhost:8761/eureka/ # Eureka Server URL
+    register-with-eureka: true
+    fetch-registry: true
+  
+management:
+  endpoints:
+    web:
+      exposure:
+        include: "*"  # Expose all endpoints
+  endpoint:
+    health:
+      show-details: always  # Show full health details
+  health:
+    mail:
+      enabled: false  # Disables mail health check
+
+
+springdoc:
+  api-docs:
+    path: /user-service/v3/api-docs  # Custom API docs path
+    enabled: true
+  swagger-ui:
+    path: /user-service/swagger-ui.html  # Explicitly set the Swagger UI path
+    enabled: false # Disable individual Swagger UIs
+  server:
+    - url: http://localhost:8081  # Gateway URL
+      description: API Gateway
+
+openapi:
+  service:
+    title: User Service API
+    version: 1.0.0
+    url: http://localhost:8082  # http://localhost:8081
+
+jwt:
+  secret: "X6mNUAoNymCWZu8CiiYkmdYD+2T9UK+GN/8H33FquE8=" # JWT secret key
+  expiration: 36000000  # 10 hours in milliseconds
+  
+logging:
+  level:
+    org.springframework.cloud.gateway: DEBUG
+    com.netflix.eureka: DEBUG
+    org.springframework.cloud.netflix.eureka: DEBUG

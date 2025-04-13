@@ -1,0 +1,163 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<head>
+    <title>Payment Gateway</title>
+    <script src="https://checkout.razorpay.com/v1/checkout.js"></script>
+    <style>
+        /* Center the entire content */
+        body {
+            display: flex;
+            justify-content: center; /* Center horizontally */
+            align-items: center; /* Center vertically */
+            height: 100vh; /* Full viewport height */
+            margin: 0; /* Remove default margin */
+            font-family: Arial, sans-serif; /* Optional: Set a font */
+            background-color: #f4f4f4; /* Optional: Light background */
+        }
+
+        /* Style for the payment form container */
+        #paymentForm {
+            background-color: white; /* White background */
+            padding: 20px; /* Padding around the form */
+            border-radius: 10px; /* Rounded corners */
+            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1); /* Optional: Add a shadow */
+            width: 300px; /* Fixed width for better alignment */
+        }
+
+        /* Style for the "Pay Now" button */
+        #payNowButton {
+            background-color: blue; /* Blue background */
+            color: white; /* White text */
+            padding: 10px 20px; /* Padding for better appearance */
+            border: none; /* Remove default border */
+            border-radius: 5px; /* Rounded corners */
+            cursor: pointer; /* Pointer cursor on hover */
+            font-size: 16px; /* Font size */
+            width: 100%; /* Full width */
+        }
+
+        /* Style for the "Pay Now" button when clicked */
+        #payNowButton:active {
+            background-color: black; /* Black background when clicked */
+            color: white; /* White text when clicked */
+        }
+
+        /* Optional: Hover effect for the "Pay Now" button */
+        #payNowButton:hover {
+            background-color: darkblue; /* Darker blue on hover */
+        }
+
+        /* Style for the table */
+        table {
+            width: 100%; /* Full width */
+        }
+
+        td {
+            padding: 10px; /* Padding for table cells */
+        }
+
+        input[type="text"], input[type="number"] {
+            width: 100%; /* Full width */
+            padding: 8px; /* Padding for inputs */
+            border: 1px solid #ccc; /* Light border */
+            border-radius: 5px; /* Rounded corners */
+        }
+
+        /* Style for the h1 tag */
+        h1 {
+            text-align: center; /* Center the heading */
+            margin-bottom: 20px; /* Space below the heading */
+        }
+        
+        .success-message {
+            color: green;
+            text-align: center;
+            padding: 20px;
+            margin-top: 20px;
+        }
+        .success-message a {
+            color: blue;
+            text-decoration: none;
+        }
+        
+    </style>
+</head>
+<body>
+    <div id="paymentForm">
+        <h1>Payment Gateway</h1>
+        <!-- Show success message if payment is already completed -->
+        <div th:if="${status == 'SUCCESS'}" class="success-message">
+            <h2>Payment Already Completed! ✅</h2>
+            <p th:text="${message}"></p>
+            <p>Check your <a th:href="@{/api/orders}">order history</a>.</p>
+        </div>
+        
+         <!-- Show payment form only if status is PENDING -->
+        <div th:unless="${status == 'SUCCESS'}">
+        <table>
+            <tr>
+                <td>Order ID:</td>
+                <td>
+                    <input type="text" id="orderId" th:value="${orderId}" readonly>
+                </td>
+            </tr>
+            <tr>
+                <td>Amount:</td>
+                <td>
+                    <input type="number" id="amount" th:value="${amount}" readonly>
+                </td>
+            </tr>
+            <tr>
+                <td colspan="2">
+                    <button id="payNowButton" onclick="initiatePayment()">Pay Now</button>
+                </td>
+            </tr>
+        </table>
+    </div>
+
+    <script th:inline="javascript">
+        const razorpayKey = /*[[${razorpayKey}]]*/ '';
+        const orderId = /*[[${orderId}]]*/ '';
+        const amount = /*[[${amount}]]*/ 0;
+        const paymentStatus = /*[[${status}]]*/ 'PENDING'; // Get status from model
+
+        function initiatePayment() {
+        	if (paymentStatus === 'SUCCESS') {
+                alert('Payment already completed!');
+                return;
+            }
+        	
+            fetch('/api/payment/create-order?orderId=' + orderId, {
+                method: 'POST'
+            })
+            .then(response => response.json())
+            .then(data => {
+                const options = {
+                    key: razorpayKey,
+                    amount: data.amount_due,
+                    currency: data.currency,
+                    order_id: data.id,
+                    handler: function(response) {
+                        alert('Payment successful! Payment ID: ' + response.razorpay_payment_id);
+                        // Send payment confirmation to your backend
+                        fetch('/api/payment/webhook', {
+                            method: 'POST',
+                            headers: { 'Content-Type': 'application/json' },
+                            body: JSON.stringify({
+                                razorpayPaymentId: response.razorpay_payment_id,
+                                razorpayOrderId: response.razorpay_order_id,
+                                status: 'SUCCESS'
+                            })
+                        }).then(() => {
+                            // Redirect to the success page
+                            window.location.href = '/api/payment/success';
+                        });
+                    }
+                };
+                new Razorpay(options).open();
+            })
+            .catch(error => console.error('Error:', error));
+        }
+    </script>
+</body>
+</html>

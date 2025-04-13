@@ -1,0 +1,130 @@
+server:
+  port: 8081 # Port for the API Gateway
+
+spring:
+  application:
+    name: API-Gateway # Name of the API Gateway service
+  cloud:
+    gateway:
+      httpclient:
+        connect-timeout: 20000 # Connection timeout in milliseconds
+        response-timeout: 7s   # Response timeout in seconds
+      routes:
+         # User Service Routes
+        - id: user-service-api
+          uri: lb://user-service
+          predicates:
+            - Path=/api/user/**, /user-service/v3/api-docs   # API endpoints
+          # No filters needed
+
+        # Product Service Routes
+        - id: product-service-api
+          uri: lb://product-service
+          predicates:
+           - Path=/api/product/**, /product-service/v3/api-docs   # API endpoints
+          # No filters needed
+          
+        
+        # Inventory Service Routes
+        - id: inventory-service-api
+          uri: lb://inventory-service
+          predicates:
+            - Path=/api/inventory/**, /inventory-service/v3/api-docs   # API endpoints
+          # No filters needed
+          
+        # Order Service Routes
+        - id: order-service-api
+          uri: lb://order-service
+          predicates:
+            - Path=/api/order/**, /order-service/v3/api-docs   # API endpoints
+          # No filters needed
+          
+        # Order Service Routes
+        - id: payment-service-api
+          uri: lb://payment-service
+          predicates:
+            - Path=/api/payment/**, /payment-service/v3/api-docs, /templates/**   # API endpoints
+          # No filters needed
+            
+      globalcors:    # Global CORS configuration
+        cors-configurations:
+          '[/**]':  # Apply CORS to all routes
+            allowed-origins: "*"  # Allow all origins (or specify your frontend URL)
+              # - "http://localhost:8081"  # Allow Swagger UI self-origin
+            allowed-methods:  # Allow specific HTTP methods
+              - GET
+              - POST
+              - PUT
+              - DELETE
+              - OPTIONS
+            allowed-headers: 
+              - "*"  # Allow all headers
+            allow-credentials: false  # Allow credentials (e.g., cookies)
+            exposed-headers:
+              - Authorization
+              - Content-Type
+              - Content-Disposition 
+            max-age: 3600  # Cache preflight response for 1 hour
+            
+  boot:
+    admin:
+      client:
+        url: http://localhost:9090/ # Spring Boot Admin server URL
+        instance:
+          prefer-ip: true  # Prefer IP address for registration
+
+  devtools:
+    livereload:
+      enabled: false # Disable live reload for development
+      
+  cache:
+    type: caffeine # Use Caffeine as the cache provider
+
+springdoc:
+  enable-native-support: true # Enable native support for SpringDoc
+  api-docs:
+    enabled: true  # Enable API docs
+  swagger-ui:
+    enabled: true     # Enable Swagger UI
+    path: /swagger-ui.html   # Path for Swagger UI
+    config-url: /v3/api-docs/swagger-config  # Swagger config URL
+    urls:
+      - url: /v3/api-docs                   # API Gateway docs
+        name: API Gateway Service
+      - url: /user-service/v3/api-docs      # User Service docs
+        name: User Service
+      - url: /product-service/v3/api-docs   # Product Service docs
+        name: Product Service
+      - url: /inventory-service/v3/api-docs   # Inventory Service docs
+        name: Inventory Service
+      - url: /order-service/v3/api-docs   # Order Service docs
+        name: Order Service
+      - url: /payment-service/v3/api-docs   # Payment Service docs
+        name: Payment Service
+      
+eureka:
+  instance:
+    hostname: localhost # api-gateway   # Hostname for Eureka registration
+    instance-id: ${eureka.instance.hostname}:${server.port}  # Unique instance ID
+    prefer-ip-address: true  # Prefer IP address for registration
+  client:
+    service-url:
+      defaultZone: http://localhost:8761/eureka/ # Eureka Server URL
+    register-with-eureka: true    # Register with Eureka
+    fetch-registry: true          # Fetch registry from Eureka
+    
+management:
+  endpoints:
+    web:
+      exposure:
+        include: "*"  # Expose all endpoints
+  endpoint:
+    health:
+      show-details: always  # Show full health details
+      
+jwt:
+  secret: "X6mNUAoNymCWZu8CiiYkmdYD+2T9UK+GN/8H33FquE8=" # JWT secret key
+  
+logging:
+  level:
+    org.springframework.web.reactive.resource.ResourceHandlerUtils: ERROR
